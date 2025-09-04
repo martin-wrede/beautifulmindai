@@ -1,29 +1,35 @@
+// App.jsx (Final Version)
+
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Home from './components/Home';
 import HowItWorks from './components/HowItWorks';
- import PlannerApp from './components/PlannerApp';
-// import PlannerApp from './components/PlannerApptest';
+import PlannerApp from './components/PlannerApp';
 import Daily from './components/Daily';
 import About from './components/About';
-
- import './App.css';
+import { ProtectedRoute } from './components/ProtectedRoute'; // Import it
+import './App.css';
 
 function App() {
   return (
-      <div className="App" id="wrapper">
-        
-        <Header />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/how-it-works" element={<HowItWorks />} />
+    <div className="App" id="wrapper">
+      <Header />
+      <Routes>
+        {/* --- Public Routes --- */}
+        <Route path="/" element={<Home />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/about" element={<About />} />
+
+        {/* --- Protected Routes --- */}
+        <Route element={<ProtectedRoute />}>
+          {/* All routes nested inside here will be protected */}
           <Route path="/planner" element={<PlannerApp />} />
-             <Route path="/daily" element={<Daily />} />
-          <Route path="/about" element={<About />} />
-        </Routes>
-      </div>
-    
+          <Route path="/daily" element={<Daily />} />
+          {/* You can add more protected routes here, like /settings, /dashboard, etc. */}
+        </Route>
+      </Routes>
+    </div>
   );
 }
 
