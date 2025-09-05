@@ -5,6 +5,8 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, useNavigate } from 'react-router-dom'; // Import BrowserRouter
 import { ClerkProvider } from '@clerk/clerk-react';
 
+import { ContextProvider } from './Context'; 
+
 import App from './App';
 import './index.css';
 
@@ -18,13 +20,16 @@ if (!PUBLISHABLE_KEY) {
 function ClerkProviderWithRoutes() {
   const navigate = useNavigate();
 
+
   return (
-    <ClerkProvider
+     <ContextProvider>
+      <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
       navigate={(to) => navigate(to)}
     >
       <App />
     </ClerkProvider>
+    </ContextProvider>
   );
 }
 

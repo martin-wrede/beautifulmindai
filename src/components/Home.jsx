@@ -36,10 +36,13 @@ export default function Home() {
 <br/>
  {content.content_h1_text}
 <br/><br/>
+ {/*
        <button onClick={() => window.open(content.button1_url)}>
             {content.button1}
           </button>
-      </div>
+   */}  
+    
+          </div>
       <div id="sidebar" className="content_sub">
         <br/> <br/> <br/><br/>
 
