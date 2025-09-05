@@ -12,6 +12,7 @@ import { Context } from '../Context';
 import * as fileUtils from './utils/fileUtils';
 import { useSubscription } from '../hooks/useSubscription'
 import './PlannerApp.css';
+import AIFormComponent from './AIFormComponent';
 
 
 // --- NEW: Helper function copied from RoadmapEdit to be used here ---
@@ -403,65 +404,39 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
       });
   }, [roadmapData]); // This will re-calculate only when roadmapData changes
 
+  
+  const formProps = {
+    onPromptChange: setGesamtPrompt,
+    onStartDateChange: setProjectStartDate,
+    onWorkDaysChange: setWorkDays,
+    onPeriodChange: setProjectPeriod,
+    gesamtPrompt: gesamtPrompt, // Pass the value for the "active prompt" display
+    aiData: aiData,
+  };
+
+  const chatProps = {
+    data: aiData,
+    messages: messages,
+    isLoading: isLoading,
+    inputMessage: inputMessage,
+    setInputMessage: setInputMessage,
+    uploadedFiles: uploadedFiles,
+    handleFileUpload: handleFileUpload,
+    deleteFile: deleteFile,
+    sendMessage: sendMessage,
+  };
+
+
   return (
     <div className="app-container">
-       {
-        subscription.isActive &&  
-
-        (
-          <>
-      <div id="part1" style={{ display: "block" }}>
        
-    
-           <div id="form-all-id">
-             <Form 
-            onPromptChange={setGesamtPrompt} 
-            onStartDateChange={setProjectStartDate}
-            onWorkDaysChange={setWorkDays}
-            onPeriodChange={setProjectPeriod} 
-          />
-        </div>
         
-         
-        
-    
-        {gesamtPrompt && (
-          <div className="active-prompt-display">
-            <strong>{aiData?.chat_activePromptLabel || 'Aktiver Prompt'}:</strong> Ready to generate plan.
-          </div>
-        )}
-        
-        <ChatInterface
-            data={aiData}
-            messages={messages}
-            isLoading={isLoading}
-            inputMessage={inputMessage}
-            setInputMessage={setInputMessage}
-            uploadedFiles={uploadedFiles}
-            handleFileUpload={handleFileUpload}
-            deleteFile={deleteFile}
-            sendMessage={sendMessage}
-        />
-      </div>
+       {subscription.isActive && (
+        <AIFormComponent formProps={formProps} chatProps={chatProps} />
+      )}
 
-      <div id="part2" style={{ display: "block" }}>
-        {roadmapToday.length > 0 ? (
-          <RoadmapEdit 
-            titleDisplay2='block' 
-            titleDisplay3='none' 
-            roadmapData={roadmapToday} 
-            isToday={true} 
-            onRoadmapUpdate={handleRoadmapUpdate} 
-          />
-        ) : (
-          <div className="info-box">
-            {(aiData?.chat_noTasksToday || 'No Tasks for today! ({today})').replace('{today}', today)}
-          </div>
-        )}
-      </div>
-      </>
-        )
-    }
+
+    
 
       <div id="part3" style={{ display:  "block"}}>
         <h2>{aiData?.app_Headline3}</h2>
