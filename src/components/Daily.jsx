@@ -64,19 +64,7 @@ export default function Daily() {
           }}
           />
      <br />
-       
-
-     <h2> Image Generation</h2>
-     <br />
-         <iframe
-            src="https://react-image-creator-airtable.pages.dev/"
-
-            title="External Content"
-              width="100%"
-            height="400"
-            style={{ border: '1px solid #ccc' }}
-          ></iframe>
-<br/>
+      
 
 {/* 
       <a href="/planner" className="roadmap-button">See Full Roadmap</a>

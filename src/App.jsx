@@ -9,6 +9,7 @@ import PlannerApp from './components/PlannerApp';
 import Daily from './components/Daily';
 import About from './components/About';
 import { ProtectedRoute } from './components/ProtectedRoute'; // Import it
+import PricingPage from './components/PricingPage';
 import './App.css';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
           <Route path="/planner" element={<PlannerApp />} />
           <Route path="/daily" element={<Daily />} />
           {/* You can add more protected routes here, like /settings, /dashboard, etc. */}
+         <Route path="/pricing" element={<PricingPage />} />
         </Route>
       </Routes>
     </div>

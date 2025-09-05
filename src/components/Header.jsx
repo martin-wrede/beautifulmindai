@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { useSubscription } from '../hooks/useSubscription'
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 
 // --- Step 1: Import your assets and context ---
 // Make sure these paths are correct for your project structure
-import { Context } from '../Context'; // Assuming your context file is named Context.jsx
+import { Context } from '../Context'; // Assuming your  file is named Context.jsx
 import Logo from '../assets/BeautifulMindAI.svg'; // Example path to your logo
 // --- FIX: Import your flag images here ---
 import German from '../assets/german_flag.png'; // Example path
@@ -63,6 +64,7 @@ export default function Header() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [menuShown, setMenuShown] = useState(false);
 
+  const subscription = useSubscription();
   // --- Step 4: Add logic to handle screen resizing ---
   useEffect(() => {
     const handleResize = () => {
@@ -150,6 +152,7 @@ export default function Header() {
 
       {/* --- Step 5: Add Clerk User Controls --- */}
       <div className="user-controls">
+    
         <SignedOut>
           <SignInButton mode="modal" afterSignInUrl="/planner">
             <button className="my-custom-signin-button">
@@ -158,6 +161,9 @@ export default function Header() {
           </SignInButton>
         </SignedOut>
         <SignedIn>
+          {!subscription.isLoading && !subscription.isActive && (
+            <Link to="/pricing" className="upgrade-link">Upgrade to Pro</Link>
+          )}
           <UserButton />
         </SignedIn>
       </div>

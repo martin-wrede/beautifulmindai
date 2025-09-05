@@ -10,6 +10,7 @@ import  SVGTimeline from './chatbot/SVGTimeline';
 import { useUndoRedo } from '../hooks/useUndoRedo'; 
 import { Context } from '../Context';
 import * as fileUtils from './utils/fileUtils';
+import { useSubscription } from '../hooks/useSubscription'
 import './PlannerApp.css';
 
 
@@ -152,6 +153,8 @@ export default  function PlannerApp() {
   // Example state for the 'Show Completed' toggle, managed locally
   const [showCompleted, setShowCompleted] = React.useState(true);
   const today = new Date().toISOString().split('T')[0];
+
+   const subscription = useSubscription();
 
   useEffect(() => {
     const contextString = `Current Project Plan (as JSON):\n${JSON.stringify(roadmapData, null, 2)}`;
@@ -402,17 +405,26 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
   return (
     <div className="app-container">
-   
+       {
+        subscription.isActive &&  
+
+        (
+          <>
       <div id="part1" style={{ display: "block" }}>
-        <h2>{aiData?.app_Headline1}</h2>
-        <div id="form-all-id">
-          <Form 
+       
+    
+           <div id="form-all-id">
+             <Form 
             onPromptChange={setGesamtPrompt} 
             onStartDateChange={setProjectStartDate}
             onWorkDaysChange={setWorkDays}
             onPeriodChange={setProjectPeriod} 
           />
         </div>
+        
+         
+        
+    
         {gesamtPrompt && (
           <div className="active-prompt-display">
             <strong>{aiData?.chat_activePromptLabel || 'Aktiver Prompt'}:</strong> Ready to generate plan.
@@ -447,6 +459,9 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
           </div>
         )}
       </div>
+      </>
+        )
+    }
 
       <div id="part3" style={{ display:  "block"}}>
         <h2>{aiData?.app_Headline3}</h2>

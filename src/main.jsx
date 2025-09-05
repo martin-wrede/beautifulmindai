@@ -22,14 +22,14 @@ function ClerkProviderWithRoutes() {
 
 
   return (
-     <ContextProvider>
+    
       <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
       navigate={(to) => navigate(to)}
     >
       <App />
     </ClerkProvider>
-    </ContextProvider>
+    
   );
 }
 
@@ -37,7 +37,9 @@ function ClerkProviderWithRoutes() {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
+     <ContextProvider>
       <ClerkProviderWithRoutes />
+      </ContextProvider>
     </BrowserRouter>
   </StrictMode>
 );
