@@ -1,5 +1,6 @@
 // src/components/PricingPage.jsx
 import React from 'react';
+import { useUser } from '@clerk/clerk-react';
 
 // In a real app, you might get this from a config file or API
 const plans = [
@@ -22,6 +23,14 @@ const plans = [
 ];
 
 export default function PricingPage() {
+  const { user } = useUser();
+
+  
+  // We add the user's ID to it dynamically
+  const personalizedCheckoutLink = user
+    ? `${proCheckoutUrl}?checkout[custom][clerk_user_id]=${user.id}`
+    : proCheckoutUrl
+
   return (
     <div className="pricing-container">
       <h1>Choose Your Plan</h1>
