@@ -16,7 +16,7 @@ const plans = [
     price: '$19 / month',
     features: ['Everything in Free, plus:', 'Unlimited AI Credits', 'Save Unlimited Projects', 'Automatic Calendar Sync'],
     // IMPORTANT: This will be your Lemon Squeezy checkout link later
-    checkoutUrl: 'https://your-store.lemonsqueezy.com/buy/988560',
+    checkoutUrl: 'https://wrede.lemonsqueezy.com/buy/988560',
     cta: 'Upgrade to Pro',
     isCurrent: false, // We'd make this dynamic later
   }
