@@ -1,3 +1,6 @@
+
+// --- START OF FILE App.jsx ---
+
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 
  import Form from './chatbot/Form';
@@ -123,7 +126,7 @@ export default  function PlannerApp() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState([]); // This is for the chatbot
+  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [gesamtPrompt, setGesamtPrompt] = useState("");
   // const [roadmapData, setRoadmapData] = useState([]);
   const [roadmapToday, setRoadmapToday] = useState([]);
@@ -290,81 +293,36 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
     };
   };
 
-  // --- NEW: Function specifically for chatbot's file upload ---
-  const handleChatbotFileUpload = async (event) => {
+  const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
     for (const file of files) {
       try {
         const content = await file.text();
         let fileType = 'text';
-        // Note: Chatbot's file upload might not directly update roadmapData
-        // It's mainly for providing context to the AI.
-        // The AI's response (processAIResponse) is what updates roadmapData.
+        let parsedEvents = [];
+        const defaultMotivation = aiData?.chat_defaultMotivation || 'Erreiche dein Ziel!';
 
         if (file.name.endsWith('.ics')) {
           fileType = 'calendar';
-          // fileUtils.parseIcsToRoadmapData(content, defaultMotivation); // Only if you want chatbot upload to ALSO directly update roadmap
+          parsedEvents = fileUtils.parseIcsToRoadmapData(content, defaultMotivation);
         } else if (file.name.endsWith('.json')) {
           fileType = 'json';
-          // fileUtils.parseJsonToRoadmapData(content, defaultMotivation); // Only if you want chatbot upload to ALSO directly update roadmap
+          parsedEvents = fileUtils.parseJsonToRoadmapData(content, defaultMotivation);
+        }
+
+        if (parsedEvents.length > 0) {
+          setRoadmapData(parsedEvents);
         }
 
         setUploadedFiles(prev => [...prev, {
           id: Date.now() + Math.random(), name: file.name, content, type: fileType, size: file.size
         }]);
       } catch (error) {
-        console.error('Error reading file for chatbot:', error);
+        console.error('Error reading file:', error);
       }
     }
-    event.target.value = ''; // Clear the input
+    event.target.value = '';
   };
-
-  // --- FIXED: Function specifically for the independent ICS/JSON upload ---
-  const handleIndependentFileUpload = async (event) => {
-    const files = Array.from(event.target.files);
-    let allParsedEvents = [];
-    const defaultMotivation = aiData?.chat_defaultMotivation || 'Erreiche dein Ziel!'; // Use AI data for default motivation
-
-    for (const file of files) {
-      try {
-        const content = await file.text();
-        let parsedEvents = [];
-
-        if (file.name.endsWith('.ics')) {
-          parsedEvents = fileUtils.parseIcsToRoadmapData(content, defaultMotivation);
-        } else if (file.name.endsWith('.json')) {
-          parsedEvents = fileUtils.parseJsonToRoadmapData(content, defaultMotivation);
-        }
-
-        if (parsedEvents.length > 0) {
-          allParsedEvents.push(...parsedEvents);
-        }
-      } catch (error) {
-        console.error('Error reading file for independent upload:', error);
-      }
-    }
-
-    if (allParsedEvents.length > 0) {
-      // FIXED: Merge with existing data instead of replacing it
-      const existingTasks = [...roadmapData];
-      const allTasks = [...existingTasks, ...allParsedEvents];
-
-      // Sort all tasks by date and update the roadmapData state
-      const sortedTasks = allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-      setRoadmapData(sortedTasks);
-
-      // Provide a visual confirmation to the user
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'system', content: `Successfully imported ${allParsedEvents.length} tasks from file.` }]);
-      }, 500);
-    } else {
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'system', content: `No valid tasks found in uploaded file(s). Please check the file format.` }]);
-      }, 500);
-    }
-    event.target.value = ''; // Clear the input so the same file can be uploaded again
-  };
-
 
   const sendMessage = async () => {
     if (!inputMessage.trim() && uploadedFiles.length === 0) return;
@@ -386,7 +344,7 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
         body: JSON.stringify({
           message: messageContent,
           messages: conversationHistory,
-          files: uploadedFiles, // Use uploadedFiles for AI context
+          files: uploadedFiles,
           prompt: gesamtPrompt,
           roadmap: roadmapContext,
         }),
@@ -463,7 +421,7 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
     inputMessage: inputMessage,
     setInputMessage: setInputMessage,
     uploadedFiles: uploadedFiles,
-    handleFileUpload: handleChatbotFileUpload, // Pass the chatbot-specific handler
+    handleFileUpload: handleFileUpload,
     deleteFile: deleteFile,
     sendMessage: sendMessage,
   };
@@ -487,21 +445,6 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
           {' '}
           {(aiData?.chat_roadmapInfo || 'Der Projektplan wird automatisch aktualisiert, wenn die KI Kalenderdaten erstellt. Aktuell werden {count} Termine angezeigt.').replace('{count}', roadmapData.length)}
         </p>
-        
-        {/* NEW: Independent ICS Upload Field */}
-        <div style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
-            <h3>Upload ICS/JSON File</h3>
-            <p>You can upload an .ics or .json file to import tasks directly into your roadmap.</p>
-            <input 
-                type="file" 
-                accept=".ics,.json" 
-                onChange={handleIndependentFileUpload} // Use the independent handler here
-                multiple 
-                style={{ marginTop: '10px' }}
-            />
-        </div>
-        {/* END NEW */}
-
         <RoadmapEdit
           roadmapData={roadmapData}
           onRoadmapUpdate={handleRoadmapUpdate}

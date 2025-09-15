@@ -1,6 +1,8 @@
 // functions/utils/airtable.js
 
-import Airtable from './airtable';
+// Correct way to import the Airtable library.
+// Make sure you have installed it: `npm install airtable`
+import Airtable from 'airtable';
 
 // This variable will hold our initialized Airtable base connection.
 let base;
@@ -13,9 +15,13 @@ let base;
  * @param {string} config.baseId - Your Airtable Base ID from secrets.
  */
 export function initAirtable(config) {
-  // Only initialize once to improve performance
-  if (!base) {
-    base = new Airtable({ apiKey: config.apiKey }).base(config.baseId);
+  // Only initialize once to improve performance or if base is not set up correctly.
+  // In a serverless function, base might need to be re-initialized per invocation
+  // if the environment is completely reset. However, for a single request context,
+  // this check helps ensure we don't re-initialize unnecessarily within that context.
+  if (!base || (base && base._apiKey !== config.apiKey) || (base && base._baseId !== config.baseId)) {
+    Airtable.configure({ apiKey: config.apiKey }); // Configure the global Airtable object
+    base = Airtable.base(config.baseId); // Get the base instance
   }
 }
 
@@ -62,7 +68,6 @@ export async function updateUserSubscription(recordId, fieldsToUpdate) {
 
 /**
  * Saves a new chat message to the 'Chat_History' table.
- * This is a new, descriptively named function to replace the duplicate.
  * @param {object} messageData - The data for the new chat message.
  * @param {string} messageData.clerkId - The ID of the user who sent the message.
  * @param {string} messageData.role - 'user' or 'assistant'.

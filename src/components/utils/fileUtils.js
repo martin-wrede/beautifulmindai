@@ -31,12 +31,12 @@ export const parseJsonToRoadmapData = (jsonContent, defaultMotivation) => {
         task: item.task,
         dailyStartTime: item.dailyStartTime || '09:00',
         dailyHours: item.dailyHours || 2,
+        durationDays: item.durationDays || 1, // Add this required property for timeline display
         motivation: item.motivation || defaultMotivation || 'Erreiche dein Ziel!'
       };
     }).filter(Boolean);
     
     validatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
-    console.log(`Successfully parsed ${validatedData.length} tasks from JSON`);
     return validatedData;
   } catch (error) {
     console.error('Error parsing JSON content:', error);
@@ -89,9 +89,11 @@ export const parseIcsToRoadmapData = (icsContent, defaultMotivation) => {
     try {
         const events = [];
         const eventBlocks = icsContent.split('BEGIN:VEVENT');
-        eventBlocks.slice(1).forEach(block => {
+
+        eventBlocks.slice(1).forEach((block, index) => {
             const lines = block.split('\n').map(line => line.trim());
             const event = {};
+
             lines.forEach(line => {
                 if (line.startsWith('SUMMARY:')) {
                     let task = line.replace('SUMMARY:', '').trim();
@@ -100,8 +102,17 @@ export const parseIcsToRoadmapData = (icsContent, defaultMotivation) => {
                 }
                 if (line.startsWith('DTSTART')) {
                     let dateTimeStr = line.substring(line.lastIndexOf(':') + 1).replace('Z', '');
-                    const match = dateTimeStr.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/);
-                    if (match) {
+
+                    // Handle different date formats
+                    let match = dateTimeStr.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/);
+                    if (!match) {
+                        // Try date-only format YYYYMMDD
+                        match = dateTimeStr.match(/(\d{4})(\d{2})(\d{2})/);
+                        if (match) {
+                            event.date = `${match[1]}-${match[2]}-${match[3]}`;
+                            event.dailyStartTime = '09:00'; // Default start time
+                        }
+                    } else {
                         event.date = `${match[1]}-${match[2]}-${match[3]}`;
                         event.dailyStartTime = `${match[4]}:${match[5]}`;
                     }
@@ -117,15 +128,19 @@ export const parseIcsToRoadmapData = (icsContent, defaultMotivation) => {
                     else if (durationStr.includes('M')) event.dailyHours = Math.max(1, Math.round(parseInt(durationStr) / 60));
                 }
             });
+
             if (event.task && event.date) {
-                events.push({
+                const finalEvent = {
                     dailyStartTime: '09:00',
                     dailyHours: 2,
+                    durationDays: 1, // Required property for timeline display
                     motivation: defaultMotivation || 'Keep pushing!',
                     ...event
-                });
+                };
+                events.push(finalEvent);
             }
         });
+
         events.sort((a, b) => new Date(a.date) - new Date(b.date));
         return events;
     } catch (error) {

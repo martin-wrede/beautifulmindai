@@ -1,7 +1,8 @@
 // functions/ai.js
 
-// Import der optionalen Airtable-Funktion
-import { saveToAirtable } from './airtable.js';
+// Import der Airtable-Funktionen
+// Removed: import { saveToAirtable } from './utils/airtable.js';
+import { initAirtable, saveChatMessage } from './utils/airtable.js';
 
 /**
  * Handles CORS pre-flight requests for the /ai endpoint.
@@ -36,7 +37,8 @@ export async function onRequestPost(context) {
       files = [],
       prompt,
       roadmap,
-      fileAttachments = [] // Für Airtable-Integration
+      fileAttachments = [], // Für Airtable-Integration
+      clerkId // Assuming clerkId is passed from the frontend for Airtable
     } = body;
 
     // Validate that the main message content exists
@@ -71,7 +73,7 @@ export async function onRequestPost(context) {
     const apiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${env.VITE_APP_OPENAI_API_KEY}`, //  
+        "Authorization": `Bearer ${env.VITE_APP_OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -85,7 +87,7 @@ export async function onRequestPost(context) {
     // Handle OpenAI API errors
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
-      
+
       if (errorText.includes("context_length_exceeded")) {
         const errorMsg = "Entschuldigung, die Konversation oder die hochgeladenen Dateien sind zu groß. Bitte kürzen Sie Ihre Eingabe oder starten Sie ein neues Gespräch.";
         const errorResponse = { choices: [{ message: { content: errorMsg } }] };
@@ -94,7 +96,7 @@ export async function onRequestPost(context) {
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
       }
-      
+
       throw new Error(`OpenAI API Error: ${apiResponse.status} - ${errorText}`);
     }
 
@@ -103,23 +105,36 @@ export async function onRequestPost(context) {
     const botAnswer = data.choices?.[0]?.message?.content || "Keine Antwort erhalten";
 
     // 📝 OPTIONAL: Save to Airtable (non-blocking)
-    if (env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID) {
+    if (env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID && clerkId) {
       try {
-        const airtableData = {
-          prompt: message,
-          botAnswer,
-          files,
-          fileAttachments
-        };
-        
-        await saveToAirtable(env, airtableData);
-        console.log("✅ Successfully saved to Airtable");
+        // Initialize Airtable for this request
+        initAirtable({ apiKey: env.AIRTABLE_API_KEY, baseId: env.AIRTABLE_BASE_ID });
+
+        // Save user message
+        await saveChatMessage({
+          clerkId: clerkId,
+          role: 'user',
+          content: message,
+          // You might want to add fileAttachments here if your table supports it
+          // fileAttachments: fileAttachments // Example if your Airtable schema supports it
+        });
+
+        // Save bot's answer
+        await saveChatMessage({
+          clerkId: clerkId, // Associate bot's message with the user who prompted it
+          role: 'assistant',
+          content: botAnswer,
+          // Add any relevant info like files if your schema supports it
+          // files: files // Example if your Airtable schema supports it
+        });
+
+        console.log("✅ Successfully saved messages to Airtable");
       } catch (airtableError) {
         console.error("❌ Airtable save failed:", airtableError);
         // Continue with AI response even if Airtable fails
       }
     } else {
-      console.log("ℹ️ Airtable credentials not found - skipping database save");
+      console.log("ℹ️ Airtable credentials or clerkId not found - skipping database save");
     }
 
     // Return the successful response to the frontend
@@ -130,7 +145,7 @@ export async function onRequestPost(context) {
 
   } catch (error) {
     console.error("Error in AI function:", error);
-    
+
     // Create fallback error message
     const fallbackMsg = {
       choices: [{
@@ -139,7 +154,7 @@ export async function onRequestPost(context) {
     };
 
     const status = error instanceof SyntaxError ? 400 : 500;
-    
+
     return new Response(JSON.stringify(fallbackMsg), {
       status: status,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },

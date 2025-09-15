@@ -14,6 +14,7 @@
     "@animxyz/react": "^0.6.7",
     "@clerk/clerk-react": "^5.46.0",
     "@heroicons/react": "^2.2.0",
+    "airtable": "^0.12.2",
     "gapi-script": "^1.2.0",
     "gh-pages": "^5.0.0",
     "lucide-react": "^0.514.0",
